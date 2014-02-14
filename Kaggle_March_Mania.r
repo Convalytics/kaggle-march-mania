@@ -28,7 +28,7 @@ head(regular_season_results, n=5)
 
 
 table(regular_season_results$wteam, regular_season_results$season)
-count(regular_season_results$wteam,regular_season_results$season)
+count(regular_season_results$wteam)
 
 # Get total win % for each team
 
