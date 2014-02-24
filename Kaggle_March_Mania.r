@@ -45,6 +45,14 @@ submissionWithSeeds <- rename(submissionWithSeeds, c("seed" = "highTeamSeed"))
 submissionWithSeeds$lowSeed <- gsub("[^0-9]","",submissionWithSeeds$lowTeamSeed)
 submissionWithSeeds$highSeed <- gsub("[^0-9]","",submissionWithSeeds$highTeamSeed)
 
+# Add High/Low/Winner columns to tourney_results
+head(tourney_results, n=10)
+
+tourney_results$lowTeamWon <- ifelse(tourney_results$wteam < tourney_results$lteam, 1, 0)
+tourney_results$lowTeam <- ifelse(tourney_results$wteam < tourney_results$lteam, tourney_results$wteam, tourney_results$lteam)
+tourney_results$highTeam <- ifelse(tourney_results$wteam > tourney_results$lteam, tourney_results$wteam, tourney_results$lteam)
+
+
 
 #Add regular season win/loss counts
 
@@ -81,15 +89,19 @@ sub.working$prediction <- .5     # Start by assuming each team has a 50% chance 
 sub.working$prediction <- sub.working$prediction + sub.working$lhWinDiff     # Add the difference in win%.
 
 # There has to be a better way to do this.
-sub.working$seedBonus[sub.working$lowSeed > sub.working$highSeed] <- .1
-sub.working$seedBonus[sub.working$lowSeed < sub.working$highSeed] <-  -.1
+#sub.working$seedBonus[sub.working$lowSeed > sub.working$highSeed] <- .1
+#sub.working$seedBonus[sub.working$lowSeed < sub.working$highSeed] <-  -.1
 
-sub.working$prediction <- sub.working$prediction + sub.working$seedBonus
+sub.working$seedBonus <- ifelse(sub.working$lowSeed < sub.working$highSeed, -.1, .1)
+
+sub.working$pred <- sub.working$prediction + sub.working$seedBonus
+sub.working$pred[sub.working$pred <= .1] <- .1
+sub.working$pred[sub.working$pred > .9] <- .9
 
 # Format and export the prediction
-convalytics.prediction <- sub.working[,c("id","prediction")]
+convalytics.prediction <- sub.working[,c("id","pred")]
 
-write.csv(convalytics.prediction, file = "convalytics_prediction.csv")
+write.csv(convalytics.prediction, file = "convalytics_prediction_2.csv")
 
 # Get tourney win count for each team
 
@@ -98,6 +110,7 @@ write.csv(convalytics.prediction, file = "convalytics_prediction.csv")
 # Does high or low team have better tourney performance?
 
 # Who performs better when away?
+
 
 # Account for likelihood of an upset.
 
