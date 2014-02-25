@@ -16,7 +16,9 @@ setwd("~/GitHub/kaggle-march-mania")
 # Import Data
 regular_season_results <- read.csv("~/GitHub/kaggle-march-mania/regular_season_results.csv")
 tourney_results <- read.csv("~/GitHub/kaggle-march-mania/tourney_results.csv")
-sample_submission <- read.csv("~/GitHub/kaggle-march-mania/sample_submission.csv")
+#sample_submission <- read.csv("~/GitHub/kaggle-march-mania/sample_submission.csv")
+#load previous RPI predictor as starting point.
+sample_submission <- read.csv("~/GitHub/kaggle-march-mania/convalytics_prediction_4.csv")
 seeds <- read.csv("~/GitHub/kaggle-march-mania/tourney_seeds.csv")
 slots <- read.csv("~/GitHub/kaggle-march-mania/tourney_slots.csv")
 
@@ -85,23 +87,21 @@ sub.working$lhWinDiff <- sub.working$lowTeamWinRate - sub.working$highTeamWinRat
 
 ### Make a prediction
 sub.working$prediction <- .5     # Start by assuming each team has a 50% chance of winning.
+#Instead of starting at 50%, we'll start at the previous prediction
+sub.working$prediction <- sub.working$pred     # 
 
 sub.working$prediction <- sub.working$prediction + sub.working$lhWinDiff     # Add the difference in win%.
 
-# There has to be a better way to do this.
-#sub.working$seedBonus[sub.working$lowSeed > sub.working$highSeed] <- .1
-#sub.working$seedBonus[sub.working$lowSeed < sub.working$highSeed] <-  -.1
+#sub.working$seedBonus <- ifelse(sub.working$lowSeed < sub.working$highSeed, .1, -.1)
 
-sub.working$seedBonus <- ifelse(sub.working$lowSeed < sub.working$highSeed, -.1, .1)
-
-sub.working$pred <- sub.working$prediction + sub.working$seedBonus
-sub.working$pred[sub.working$pred <= .1] <- .1
-sub.working$pred[sub.working$pred > .9] <- .9
+sub.working$pred <- sub.working$prediction # seed is already taken into account + sub.working$seedBonus
+sub.working$pred[sub.working$pred <= .05] <- .05
+sub.working$pred[sub.working$pred > .95] <- .95
 
 # Format and export the prediction
 convalytics.prediction <- sub.working[,c("id","pred")]
 
-write.csv(convalytics.prediction, file = "convalytics_prediction_2.csv")
+write.csv(convalytics.prediction, file = "convalytics_prediction_5.csv", row.names=F)
 
 # Get tourney win count for each team
 
