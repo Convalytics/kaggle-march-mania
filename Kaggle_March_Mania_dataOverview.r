@@ -8,10 +8,43 @@
 
 #install.packages('plyr')
 library(plyr)
-
+library(ggplot2)
 # Set Working Directory
 #setwd("C:\\Users\\jgreen\\Documents\\GitHub\\kaggle-march-mania")
 setwd("~/GitHub/kaggle-march-mania")
+
+
+predictions <- readRDS("~/GitHub/kaggle-march-mania/predictionFile.rdata")
+livegames <- subset(predictions, predictions$lowTeamWon == 1 | predictions$lowTeamWon == 0)
+livegames$lowSeed <- as.numeric(livegames$lowSeed)
+livegames$highSeed <- as.numeric(livegames$highSeed)
+livegames$lowTeamWon <- as.numeric(livegames$lowTeamWon)
+winsBySeed <- ddply(livegames,c("seedDif"), summarise, N=sum(livegames$lowTeamWon))
+
+winsBySeed$N <- as.numeric(winsBySeed$N)
+winsBySeed$lowTeamWon <- as.numeric(winsBySeed$lowTeamWon)
+
+plot(winsBySeed$N, winsBySeed$seedDif)
+#ggplot(winsBySeed, aes(N), x=seedDif)
+#ggplot(csat, aes(COGS)) + geom_histogram(binwidth=50, fill="gray", color="black") + theme_bw()
+qplot(seedDif, data=winsBySeed, weight=N, geom="histogram") + geom_histogram(aes(y = ..density..)) + geom_density()
+
+head(winsBySeed)
+dim(livegames)
+head(livegames)
+boxplot(c(predictions$pred, predictions$pred.seeds) ~ predictions$lowTeamWon)
+
+# Lower seeded teams generally win.
+boxplot(livegames$lowSeed ~ livegames$lowTeamWon)
+
+plot(livegames$lowSeed ~ livegames$highSeed, col=as.factor(livegames$lowTeamWon), size=.5)
+
+plot(livegames$seedDif ~ (sum(livegames$lowTeamWon)/length(livegames)))
+
+livegames$seedDif <- livegames$lowSeed - livegames$highSeed
+
+head(livegames, n=20)
+
 
 # Import Data
 regular_season_results <- read.csv("~/GitHub/kaggle-march-mania/regular_season_results.csv")
@@ -22,7 +55,7 @@ sample_submission <- read.csv("~/GitHub/kaggle-march-mania/convalytics_predictio
 seeds <- read.csv("~/GitHub/kaggle-march-mania/tourney_seeds.csv")
 slots <- read.csv("~/GitHub/kaggle-march-mania/tourney_slots.csv")
 
-
+head(regular_season_results)
 # Summarize the imported data
 head(regular_season_results, n=10)
 head(tourney_results, n=10)
@@ -126,13 +159,12 @@ sub.working$pred <- (sub.working$pred.algo + sub.working$pred.lhWinDiff + sub.wo
 
 # Write out the full prediction file:
 write.csv(sub.working, file = "predictionDetails.csv", row.names=F)
-# Also save the prediction file as R data.
-saveRDS(sub.working, file="predictionFile.rdata")
+
 
 # Format and export the prediction
 convalytics.prediction <- sub.working[,c("id","pred")]
 # Write out the submission file for kaggle:
-write.csv(convalytics.prediction, file = "convalytics_prediction-xx.csv", row.names=F)
+write.csv(convalytics.prediction, file = "convalytics_prediction_6.csv", row.names=F)
 
 # Get tourney win count for each team
 
